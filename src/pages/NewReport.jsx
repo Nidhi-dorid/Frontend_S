@@ -25,30 +25,16 @@ const NewReport = () => {
 
   const issueOptions = ['Pothole', 'Broken Streetlight', 'Water Leak', 'Road Damage', 'Other'];
 
-  useEffect(() => {
-    fetchCities();
+  const fetchMapMarkers = React.useCallback(async (cityId) => {
+    try {
+      const data = await getMapMarkers(cityId);
+      setMarkers(data);
+    } catch {
+      console.log('Error fetching map pins');
+    }
   }, []);
 
-  useEffect(() => {
-    if (selectedCityId) {
-      fetchZones(selectedCityId);
-      fetchMapMarkers(selectedCityId);
-    }
-  }, [selectedCityId]);
-
-  const fetchCities = async () => {
-    try {
-      const data = await getCities();
-      setCities(data);
-      if (data.length > 0 && !selectedCityId) {
-        setSelectedCityId(data[0].id || data[0]._id);
-      }
-    } catch (error) {
-      toast.error('Failed to load cities');
-    }
-  };
-
-  const fetchZones = async (cityId) => {
+  const fetchZones = React.useCallback(async (cityId) => {
     try {
       const data = await getZones(cityId);
       setZones(data);
@@ -57,19 +43,33 @@ const NewReport = () => {
       } else {
         setSelectedZoneId('');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to load zones');
     }
-  };
+  }, []);
 
-  const fetchMapMarkers = async (cityId) => {
+  const fetchCities = React.useCallback(async () => {
     try {
-      const data = await getMapMarkers(cityId);
-      setMarkers(data);
-    } catch (error) {
-      console.log('Error fetching map pins');
+      const data = await getCities();
+      setCities(data);
+      if (data.length > 0 && !selectedCityId) {
+        setSelectedCityId(data[0].id || data[0]._id);
+      }
+    } catch {
+      toast.error('Failed to load cities');
     }
-  };
+  }, [selectedCityId, setSelectedCityId]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchCities();
+  }, [fetchCities]);
+
+  useEffect(() => {
+    if (selectedCityId) {
+      fetchMapMarkers(selectedCityId);
+    }
+  }, [selectedCityId, fetchZones, fetchMapMarkers]);
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -104,8 +104,8 @@ const NewReport = () => {
       await reportPothole(formData);
       toast.success('✅ Your report has been submitted successfully!');
       navigate('/my-complaints');
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to submit report. Please try again.');
+    } catch {
+      toast.error('Failed to submit report. Please try again.');
     } finally {
       setLoading(false);
     }

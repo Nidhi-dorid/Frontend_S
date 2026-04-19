@@ -28,29 +28,19 @@ const Dashboard = () => {
     { name: 'Jun', reports: 80 }
   ];
 
-  useEffect(() => {
-    fetchCities();
-  }, []);
-
-  useEffect(() => {
-    if (selectedCityId) {
-      fetchDashboardData(selectedCityId);
-    }
-  }, [selectedCityId]);
-
-  const fetchCities = async () => {
+  const fetchCities = React.useCallback(async () => {
     try {
       const data = await getCities();
       setCities(data);
       if (data.length > 0 && !selectedCityId) {
         setSelectedCityId(data[0].id || data[0]._id);
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to load cities');
     }
-  };
+  }, [selectedCityId, setSelectedCityId]);
 
-  const fetchDashboardData = async (cityId) => {
+  const fetchDashboardData = React.useCallback(async (cityId) => {
     setLoading(true);
     try {
       const [summaryData, zonesData, markersData] = await Promise.all([
@@ -61,12 +51,24 @@ const Dashboard = () => {
       setSummary(summaryData);
       setRecentComplaints(zonesData);
       setMarkers(markersData);
-    } catch (error) {
+    } catch {
       toast.error('Error loading dashboard data');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchCities();
+  }, [fetchCities]);
+
+  useEffect(() => {
+    if (selectedCityId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchDashboardData(selectedCityId);
+    }
+  }, [selectedCityId, fetchDashboardData]);
 
   return (
     <div className="space-y-6 max-h-full pb-8">

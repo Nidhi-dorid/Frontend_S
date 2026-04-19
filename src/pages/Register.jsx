@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { register } from '../api/auth';
+import Logo from '../components/Logo';
 import toast from 'react-hot-toast';
 
 const Register = () => {
@@ -40,9 +41,7 @@ const Register = () => {
           className="absolute inset-0 w-full h-full object-cover mix-blend-overlay"
         />
         <div className="relative z-20 flex flex-col justify-center px-16 w-full text-white">
-          <div className="w-16 h-16 bg-brand-orange rounded-xl mb-8 flex items-center justify-center text-3xl font-bold">
-            S
-          </div>
+          <Logo size="lg" className="mb-8" />
           <h1 className="text-5xl font-bold leading-tight mb-6">
             Make A Difference.<br/>Join SCRS.
           </h1>
@@ -55,9 +54,7 @@ const Register = () => {
       {/* Right Panel - Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 overflow-y-auto max-h-screen">
         <div className="w-full max-w-md">
-          <div className="lg:hidden w-12 h-12 bg-brand-orange rounded-xl mb-8 flex items-center justify-center text-white text-2xl font-bold">
-            S
-          </div>
+          <Logo size="md" className="lg:hidden mb-8" />
           <h2 className="text-3xl font-bold mb-2">Create an Account</h2>
           <p className="text-gray-500 mb-8">Sign up to start reporting issues.</p>
           

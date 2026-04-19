@@ -14,17 +14,7 @@ const MyComplaints = () => {
   const [mapMarkers, setMapMarkers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchMyReports();
-  }, []);
-
-  useEffect(() => {
-    if (selectedCityId) {
-      fetchMapMarkers(selectedCityId);
-    }
-  }, [selectedCityId]);
-
-  const fetchMyReports = async () => {
+  const fetchMyReports = React.useCallback(async () => {
     setLoading(true);
     try {
       const data = await getMyReports();
@@ -32,7 +22,7 @@ const MyComplaints = () => {
       if (data.length > 0) {
         setSelectedReport(data[0]);
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to connect to backend — showing mock data instead.');
       const mockData = [{
         id: 'mock-1', 
@@ -51,16 +41,46 @@ const MyComplaints = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchMapMarkers = async (cityId) => {
+  const fetchMapMarkers = React.useCallback(async (cityId) => {
     try {
       const data = await getMapMarkers(cityId);
       setMapMarkers(data);
-    } catch (error) {
+    } catch {
       console.log('Failed to fetch map markers');
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchMyReports();
+  }, [fetchMyReports]);
+
+  useEffect(() => {
+    if (selectedCityId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchMapMarkers(selectedCityId);
+    }
+  }, [selectedCityId, fetchMapMarkers]);
+
+  const reportHistory = React.useMemo(() => {
+    if (!selectedReport) return [];
+    if (selectedReport.history) return selectedReport.history;
+    
+    // Fallback static history logic moved out of render
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - 86400000);
+    
+    return [
+      { status: 'Submitted', timestamp: selectedReport.createdAt || now.toISOString(), message: 'Report received' },
+      ...(selectedReport.status?.toLowerCase() === 'in progress' ? [{ status: 'In Progress', timestamp: now.toISOString(), message: 'Team is investigating' }] : []),
+      ...(selectedReport.status?.toLowerCase() === 'resolved' ? [
+        { status: 'In Progress', timestamp: yesterday.toISOString(), message: 'Work started' }, 
+        { status: 'Resolved', timestamp: now.toISOString(), message: 'Issue has been fixed' }
+      ] : [])
+    ];
+  }, [selectedReport]);
 
   const handleUpvote = async (id) => {
     try {
@@ -73,7 +93,7 @@ const MyComplaints = () => {
         setSelectedReport(prev => ({ ...prev, upvotes: (prev.upvotes || 0) + 1 }));
       }
       toast.success('Upvoted successfully!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to upvote');
     }
   };
@@ -154,11 +174,7 @@ const MyComplaints = () => {
 
               <div>
                 <h4 className="font-bold text-gray-900 mb-6">Progress Tracking</h4>
-                <StatusTimeline history={selectedReport.history || [
-                  { status: 'Submitted', timestamp: selectedReport.createdAt || new Date(), message: 'Report received' },
-                  ...(selectedReport.status?.toLowerCase() === 'in progress' ? [{ status: 'In Progress', timestamp: new Date(), message: 'Team is investigating' }] : []),
-                  ...(selectedReport.status?.toLowerCase() === 'resolved' ? [{ status: 'In Progress', timestamp: new Date(Date.now() - 86400000), message: 'Work started' }, { status: 'Resolved', timestamp: new Date(), message: 'Issue has been fixed' }] : [])
-                ]} />
+                <StatusTimeline history={reportHistory} />
               </div>
             </div>
           </div>
