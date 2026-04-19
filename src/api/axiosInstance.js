@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: BASE_URL,
 });
 
 // Request interceptor to attach Bearer token
