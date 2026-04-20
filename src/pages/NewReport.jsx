@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { getCities, getZones } from '../api/locations';
-import { getMapMarkers, reportPothole } from '../api/potholes';
+import { getCities, getZones, getMapMarkers, reportPothole } from '../api';
 import { CityContext } from '../context/CityContext';
-import MapView from '../components/MapView';
+import MapView from '../components/features/MapView';
 import toast from 'react-hot-toast';
 import { UploadCloud, Image as ImageIcon, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';

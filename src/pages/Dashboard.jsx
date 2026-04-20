@@ -1,13 +1,11 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { getCities } from '../api/locations';
-import { getSummary, getDashboardZones } from '../api/dashboard';
-import { getMapMarkers } from '../api/potholes';
+import { getCities, getSummary, getDashboardZones, getMapMarkers } from '../api';
 import { CityContext } from '../context/CityContext';
 import { FileText, Clock, Wrench, CheckCircle, Map as MapIcon, BarChart2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import StatCard from '../components/StatCard';
-import ComplaintCard from '../components/ComplaintCard';
-import MapView from '../components/MapView';
+import StatCard from '../components/common/StatCard';
+import ComplaintCard from '../components/features/ComplaintCard';
+import MapView from '../components/features/MapView';
 import toast from 'react-hot-toast';
 
 const Dashboard = () => {

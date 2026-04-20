@@ -7,12 +7,12 @@ import { AuthProvider } from './context/AuthContext';
 import { CityProvider } from './context/CityContext';
 
 // Components
-import Layout from './components/Layout';
-import ProtectedRoute from './components/ProtectedRoute';
+import Layout from './components/layout/Layout';
+import ProtectedRoute from './components/layout/ProtectedRoute';
 
 // Pages
-import Login from './pages/Login';
-import Register from './pages/Register';
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
 import Dashboard from './pages/Dashboard';
 import NewReport from './pages/NewReport';
 import MyComplaints from './pages/MyComplaints';

@@ -1,8 +1,8 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, PlusCircle, LayoutList, Settings, Info, LogOut, Menu } from 'lucide-react';
-import Logo from './Logo';
-import { AuthContext } from '../context/AuthContext';
+import Logo from '../common/Logo';
+import { AuthContext } from '../../context/AuthContext';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const { logoutAuth } = React.useContext(AuthContext);

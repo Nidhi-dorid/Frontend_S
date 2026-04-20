@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { getMyReports, upvotePothole, getMapMarkers } from '../api/potholes';
+import { getMyReports, upvotePothole, getMapMarkers } from '../api';
 import { CityContext } from '../context/CityContext';
-import ComplaintCard from '../components/ComplaintCard';
-import StatusTimeline from '../components/StatusTimeline';
-import MapView from '../components/MapView';
+import ComplaintCard from '../components/features/ComplaintCard';
+import StatusTimeline from '../components/common/StatusTimeline';
+import MapView from '../components/features/MapView';
 import { Heart, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 
