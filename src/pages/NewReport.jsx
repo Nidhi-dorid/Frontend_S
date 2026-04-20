@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { getCities, getZones, getMapMarkers, reportPothole } from '../api';
 import { CityContext } from '../context/CityContext';
+import { getCityCenter } from '../lib/cityCoordinates';
 import MapView from '../components/features/MapView';
 import toast from 'react-hot-toast';
 import { UploadCloud, Image as ImageIcon, X } from 'lucide-react';
@@ -15,10 +16,10 @@ const NewReport = () => {
   const [description, setDescription] = useState('');
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
-  
+
   const [markers, setMarkers] = useState([]);
   const [loading, setLoading] = useState(false);
-  
+
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
@@ -37,7 +38,7 @@ const NewReport = () => {
     try {
       const data = await getZones(cityId);
       setZones(data);
-      if(data.length > 0) {
+      if (data.length > 0) {
         setSelectedZoneId(data[0].id || data[0]._id);
       } else {
         setSelectedZoneId('');
@@ -66,6 +67,7 @@ const NewReport = () => {
 
   useEffect(() => {
     if (selectedCityId) {
+      fetchZones(selectedCityId);
       fetchMapMarkers(selectedCityId);
     }
   }, [selectedCityId, fetchZones, fetchMapMarkers]);
@@ -81,7 +83,7 @@ const NewReport = () => {
   const removeFile = () => {
     setFile(null);
     setPreviewUrl(null);
-    if(fileInputRef.current) fileInputRef.current.value = '';
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSubmit = async (e) => {
@@ -99,6 +101,18 @@ const NewReport = () => {
       formData.append('zoneId', selectedZoneId);
       formData.append('issueType', issueType);
       formData.append('description', description);
+
+      // Add location data that the backend likely requires to place the marker and report details
+      const cityData = cities.find(c => (c.id || c._id) == selectedCityId);
+      const cityName = cityData?.name || '';
+      const mapCenter = getCityCenter(cityName);
+      const zoneData = zones.find(z => (z.id || z._id) == selectedZoneId);
+      const zoneName = zoneData?.zoneName || zoneData?.name || '';
+
+      formData.append('lat', mapCenter.lat);
+      formData.append('lng', mapCenter.lng);
+      formData.append('locationName', `${zoneName}, ${cityName}`);
+      formData.append('title', `${issueType} Report`);
 
       await reportPothole(formData);
       toast.success('✅ Your report has been submitted successfully!');
@@ -122,7 +136,7 @@ const NewReport = () => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Issue Photo (Required)</label>
             {!previewUrl ? (
-              <div 
+              <div
                 className="w-full h-48 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}
               >
@@ -133,8 +147,8 @@ const NewReport = () => {
             ) : (
               <div className="relative w-full h-48 rounded-xl overflow-hidden border border-gray-200">
                 <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={removeFile}
                   className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full hover:bg-black/70"
                 >
@@ -142,20 +156,20 @@ const NewReport = () => {
                 </button>
               </div>
             )}
-            <input 
-              type="file" 
-              accept="image/*" 
-              className="hidden" 
-              ref={fileInputRef} 
-              onChange={handleFileChange} 
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              ref={fileInputRef}
+              onChange={handleFileChange}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-              <select 
-                value={selectedCityId || ''} 
+              <select
+                value={selectedCityId || ''}
                 onChange={(e) => setSelectedCityId(e.target.value)}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-orange outline-none bg-white"
               >
@@ -164,32 +178,32 @@ const NewReport = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Zone / Area</label>
-              <select 
-                value={selectedZoneId} 
+              <select
+                value={selectedZoneId}
                 onChange={(e) => setSelectedZoneId(e.target.value)}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-orange outline-none bg-white"
               >
                 <option value="" disabled>Select Zone</option>
-                {zones.map(z => <option key={z.id || z._id} value={z.id || z._id}>{z.name}</option>)}
+                {zones.map(z => <option key={z.id || z._id} value={z.id || z._id}>{z.zoneName || z.name}</option>)}
               </select>
             </div>
           </div>
 
           <div>
-             <label className="block text-sm font-medium text-gray-700 mb-1">Issue Type</label>
-             <select 
-                value={issueType} 
-                onChange={(e) => setIssueType(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-orange outline-none bg-white"
-              >
-                {issueOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-              </select>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Issue Type</label>
+            <select
+              value={issueType}
+              onChange={(e) => setIssueType(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-orange outline-none bg-white"
+            >
+              {issueOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea 
-              rows="4" 
+            <textarea
+              rows="4"
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-orange outline-none resize-none"
               placeholder="Provide more context about the issue..."
               value={description}
@@ -197,8 +211,8 @@ const NewReport = () => {
             ></textarea>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
             className="w-full bg-brand-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-all flex items-center justify-center disabled:opacity-50"
           >
@@ -209,10 +223,10 @@ const NewReport = () => {
 
       {/* Right: Map Preview */}
       <div className="w-full lg:w-1/2 h-[50vh] lg:h-[85vh] bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col relative">
-        <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur px-4 py-2 rounded-lg shadow font-medium text-sm text-gray-800">
-           Existing Issues in {cities.find(c => (c.id || c._id) === selectedCityId)?.name || 'City'}
+        <div className="absolute top-4 left-4 z-[1000] bg-white/90 backdrop-blur px-4 py-2 rounded-lg shadow font-medium text-sm text-gray-800">
+          Existing Issues in {cities.find(c => (c.id || c._id) == selectedCityId)?.name || 'City'}
         </div>
-        <MapView markers={markers} />
+        <MapView markers={markers} center={getCityCenter(cities.find(c => (c.id || c._id) == selectedCityId)?.name)} />
       </div>
     </div>
   );

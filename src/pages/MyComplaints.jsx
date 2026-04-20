@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { getMyReports, upvotePothole, getMapMarkers } from '../api';
 import { CityContext } from '../context/CityContext';
+import { getCityCenter } from '../lib/cityCoordinates';
 import ComplaintCard from '../components/features/ComplaintCard';
 import StatusTimeline from '../components/common/StatusTimeline';
 import MapView from '../components/features/MapView';
@@ -23,21 +24,9 @@ const MyComplaints = () => {
         setSelectedReport(data[0]);
       }
     } catch {
-      toast.error('Failed to connect to backend — showing mock data instead.');
-      const mockData = [{
-        id: 'mock-1', 
-        title: 'Large Pothole on Main St', 
-        issueType: 'Pothole', 
-        locationName: 'Main Street near Park',
-        description: 'A very deep pothole causing traffic slowdowns.', 
-        status: 'Pending', 
-        upvotes: 12,
-        createdAt: new Date().toISOString(), 
-        lat: 28.6139, 
-        lng: 77.2090
-      }];
-      setReports(mockData);
-      setSelectedReport(mockData[0]);
+      toast.error('Failed to load your reports. Please try again later.');
+      setReports([]);
+      setSelectedReport(null);
     } finally {
       setLoading(false);
     }
@@ -103,7 +92,9 @@ const MyComplaints = () => {
     ? [...mapMarkers, { lat: selectedReport.lat, lng: selectedReport.lng, title: selectedReport.title }]
     : mapMarkers;
 
-  const mapCenter = selectedReport ? { lat: selectedReport.lat || 0, lng: selectedReport.lng || 0 } : null;
+  const mapCenter = selectedReport && selectedReport.lat
+    ? { lat: selectedReport.lat, lng: selectedReport.lng }
+    : getCityCenter(null);
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-[85vh]">
