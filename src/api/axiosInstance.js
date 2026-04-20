@@ -18,4 +18,18 @@ axiosInstance.interceptors.request.use(
   }
 );
 
+// Response interceptor to unwrap backend's { success, data: ... } wrapper
+axiosInstance.interceptors.response.use(
+  (response) => {
+    // If backend wraps response in { success, data }, extract the inner data
+    if (response.data && response.data.success !== undefined && response.data.data !== undefined) {
+      response.data = response.data.data;
+    }
+    return response;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 export default axiosInstance;
