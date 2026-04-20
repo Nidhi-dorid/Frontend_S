@@ -18,26 +18,14 @@ const MyComplaints = () => {
     setLoading(true);
     try {
       const data = await getMyReports();
-      setReports(data);
-      if (data.length > 0) {
-        setSelectedReport(data[0]);
+      const reportsArray = Array.isArray(data) ? data : [];
+      setReports(reportsArray);
+      if (reportsArray.length > 0) {
+        setSelectedReport(reportsArray[0]);
       }
     } catch {
-      toast.error('Failed to connect to backend — showing mock data instead.');
-      const mockData = [{
-        id: 'mock-1', 
-        title: 'Large Pothole on Main St', 
-        issueType: 'Pothole', 
-        locationName: 'Main Street near Park',
-        description: 'A very deep pothole causing traffic slowdowns.', 
-        status: 'Pending', 
-        upvotes: 12,
-        createdAt: new Date().toISOString(), 
-        lat: 28.6139, 
-        lng: 77.2090
-      }];
-      setReports(mockData);
-      setSelectedReport(mockData[0]);
+      toast.error('Failed to load your reports.');
+      setReports([]);
     } finally {
       setLoading(false);
     }

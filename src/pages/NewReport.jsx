@@ -66,6 +66,7 @@ const NewReport = () => {
 
   useEffect(() => {
     if (selectedCityId) {
+      fetchZones(selectedCityId);
       fetchMapMarkers(selectedCityId);
     }
   }, [selectedCityId, fetchZones, fetchMapMarkers]);
