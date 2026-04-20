@@ -17,9 +17,15 @@ const Login = () => {
     setLoading(true);
     try {
       const data = await login(email, password);
-      // Ensure backend returns token
-      if (data && data.token) {
-        loginAuth(data.token, data.user);
+      // Backend wraps response in { success, data: { token, name, email, ... } }
+      const result = data.data || data;
+      if (result && result.token) {
+        loginAuth(result.token, {
+          userId: result.userId,
+          name: result.name,
+          email: result.email,
+          role: result.role,
+        });
         toast.success('Successfully logged in!');
         navigate('/dashboard');
       } else {
