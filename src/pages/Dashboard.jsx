@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { getCities, getSummary, getDashboardZones, getMapMarkers, getMonthlyReports } from '../api';
+import { getCities, getSummary, getDashboardZones, getMapMarkers } from '../api';
 import { CityContext } from '../context/CityContext';
 import { FileText, Clock, Wrench, CheckCircle, Map as MapIcon, BarChart2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -14,14 +14,23 @@ const Dashboard = () => {
   const [summary, setSummary] = useState({ total: 0, pending: 0, inProgress: 0, resolved: 0 });
   const [recentComplaints, setRecentComplaints] = useState([]);
   const [markers, setMarkers] = useState([]);
-  const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Example static data for the chart, can be replaced by real API data if backend provides it
+  const chartData = [
+    { name: 'Jan', reports: 40 },
+    { name: 'Feb', reports: 30 },
+    { name: 'Mar', reports: 45 },
+    { name: 'Apr', reports: 50 },
+    { name: 'May', reports: 65 },
+    { name: 'Jun', reports: 80 }
+  ];
 
   const fetchCities = React.useCallback(async () => {
     try {
       const data = await getCities();
-      setCities(Array.isArray(data) ? data : []);
-      if (Array.isArray(data) && data.length > 0 && !selectedCityId) {
+      setCities(data);
+      if (data.length > 0 && !selectedCityId) {
         setSelectedCityId(data[0].id || data[0]._id);
       }
     } catch {
@@ -32,16 +41,14 @@ const Dashboard = () => {
   const fetchDashboardData = React.useCallback(async (cityId) => {
     setLoading(true);
     try {
-      const [summaryData, zonesData, markersData, monthlyData] = await Promise.all([
+      const [summaryData, zonesData, markersData] = await Promise.all([
         getSummary(cityId).catch(() => ({ total: 0, pending: 0, inProgress: 0, resolved: 0 })),
         getDashboardZones(cityId).catch(() => []),
-        getMapMarkers(cityId).catch(() => []),
-        getMonthlyReports(cityId).catch(() => [])
+        getMapMarkers(cityId).catch(() => [])
       ]);
-      setSummary(summaryData || { total: 0, pending: 0, inProgress: 0, resolved: 0 });
-      setRecentComplaints(Array.isArray(zonesData) ? zonesData : []);
-      setMarkers(Array.isArray(markersData) ? markersData : []);
-      setChartData(Array.isArray(monthlyData) ? monthlyData : []);
+      setSummary(summaryData);
+      setRecentComplaints(zonesData);
+      setMarkers(markersData);
     } catch {
       toast.error('Error loading dashboard data');
     } finally {
