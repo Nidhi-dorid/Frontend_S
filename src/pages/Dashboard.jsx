@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getCities, getSummary, getDashboardZones, getMapMarkers } from '../api';
 import { CityContext } from '../context/CityContext';
 import { getCityCenter } from '../lib/cityCoordinates';
@@ -10,9 +11,10 @@ import MapView from '../components/features/MapView';
 import toast from 'react-hot-toast';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const { selectedCityId, setSelectedCityId } = useContext(CityContext);
   const [cities, setCities] = useState([]);
-  const [summary, setSummary] = useState({ totalPotholes: 0, pending: 0, inProgress: 0, completed: 0 });
+  const [summary, setSummary] = useState({ total: 0, pending: 0, inProgress: 0, completed: 0, high: 0, medium: 0, low: 0 });
   const [zones, setZones] = useState([]);
   const [markers, setMarkers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +35,7 @@ const Dashboard = () => {
     setLoading(true);
     try {
       const [summaryData, zonesData, markersData] = await Promise.all([
-        getSummary(cityId).catch(() => ({ totalPotholes: 0, pending: 0, inProgress: 0, completed: 0 })),
+        getSummary(cityId).catch(() => ({ total: 0, pending: 0, inProgress: 0, completed: 0, high: 0, medium: 0, low: 0 })),
         getDashboardZones(cityId).catch(() => []),
         getMapMarkers(cityId).catch(() => [])
       ]);
@@ -59,12 +61,14 @@ const Dashboard = () => {
     }
   }, [selectedCityId, fetchDashboardData]);
 
-  // Derive chart data from real zone data returned by the API
   const chartData = React.useMemo(() => {
     if (!zones || zones.length === 0) return [];
-    // Show zones that have at least some data, or show top 8 zones
-    return zones
-      .slice(0, 8)
+    
+    // Sort by reports in descending order and get top 5
+    const sortedZones = [...zones].sort((a, b) => (b.totalPotholes || 0) - (a.totalPotholes || 0));
+    
+    return sortedZones
+      .slice(0, 5)
       .map(z => ({
         name: z.zoneName ? z.zoneName.replace(' Zone', '').substring(0, 15) : 'Unknown',
         reports: z.totalPotholes || 0,
@@ -106,7 +110,7 @@ const Dashboard = () => {
         <>
           {/* Stat Cards — mapped to real backend fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatCard title="Total Reports" value={summary.totalPotholes || 0} colorClass="bg-blue-100 text-blue-600" icon={<FileText size={24} />} />
+            <StatCard title="Total Reports" value={summary.total || summary.totalPotholes || 0} colorClass="bg-blue-100 text-blue-600" icon={<FileText size={24} />} />
             <StatCard title="Pending" value={summary.pending || 0} colorClass="bg-yellow-100 text-yellow-600" icon={<Clock size={24} />} />
             <StatCard title="In Progress" value={summary.inProgress || 0} colorClass="bg-orange-100 text-orange-600" icon={<Wrench size={24} />} />
             <StatCard title="Resolved" value={summary.completed || 0} colorClass="bg-green-100 text-green-600" icon={<CheckCircle size={24} />} />
@@ -126,7 +130,7 @@ const Dashboard = () => {
                         ? (zone.pending > 0 ? 'Pending' : zone.inProgress > 0 ? 'In Progress' : 'Resolved')
                         : 'No Reports',
                       issueType: `${zone.totalPotholes} total reports`,
-                    }} />
+                    }} onClick={() => navigate('/my-complaints')} />
                   ))
                 ) : (
                   <div className="bg-white p-8 rounded-xl border border-gray-100 text-center text-gray-500">
@@ -150,12 +154,12 @@ const Dashboard = () => {
                   <BarChart2 size={20} className="text-brand-orange"/>
                   Zone Reports
                 </h2>
-                <div style={{ width: '100%', height: '250px', position: 'relative' }}>
+                <div className="w-full" style={{ height: 250 }}>
                   {chartData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="99%" height={240} debounce={50}>
                       <BarChart data={chartData}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 10}} angle={-30} textAnchor="end" height={60} />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 10}} angle={-30} textAnchor="end" height={60} interval={0} />
                         <YAxis axisLine={false} tickLine={false} tick={{fill: '#6b7280'}} />
                         <Tooltip cursor={{fill: '#f3f4f6'}} />
                         <Bar dataKey="reports" fill="#1E3A5F" radius={[4, 4, 0, 0]} />

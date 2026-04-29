@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, PlusCircle, LayoutList, Settings, Info, LogOut, Menu } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, LayoutList, Settings, Info, LogOut, Menu, Map } from 'lucide-react';
 import Logo from '../common/Logo';
 import { AuthContext } from '../../context/AuthContext';
 
@@ -17,6 +17,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
     { name: 'New Report', icon: <PlusCircle size={20} />, path: '/new-report' },
     { name: 'My Complaints', icon: <LayoutList size={20} />, path: '/my-complaints' },
+    { name: 'How It Works', icon: <Map size={20} />, path: '/how-it-works' },
     { name: 'About Us', icon: <Info size={20} />, path: '/about' },
     { name: 'Settings', icon: <Settings size={20} />, path: '/settings' },
   ];

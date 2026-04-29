@@ -91,13 +91,7 @@ const Login = () => {
               />
             </div>
 
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center text-gray-600">
-                <input type="checkbox" className="mr-2 rounded text-brand-orange focus:ring-brand-orange" />
-                Remember me
-              </label>
-              <a href="#" className="text-brand-orange font-medium hover:underline">Forgot password?</a>
-            </div>
+
 
             <button 
               type="submit" 

@@ -18,6 +18,7 @@ import NewReport from './pages/NewReport';
 import MyComplaints from './pages/MyComplaints';
 import Settings from './pages/Settings';
 import AboutUs from './pages/AboutUs';
+import HowItWorks from './pages/HowItWorks';
 
 const App = () => {
   return (
@@ -33,6 +34,7 @@ const App = () => {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/new-report" element={<NewReport />} />
               <Route path="/my-complaints" element={<MyComplaints />} />
+              <Route path="/how-it-works" element={<HowItWorks />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/about" element={<AboutUs />} />
             </Route>

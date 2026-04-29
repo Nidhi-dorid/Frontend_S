@@ -60,11 +60,13 @@ const MyComplaints = () => {
     // Fallback static history logic moved out of render
     const now = new Date();
     const yesterday = new Date(now.getTime() - 86400000);
+    // Normalize status: backend may send 'in_progress', 'completed', 'pending'
+    const normalizedStatus = (selectedReport.status || '').toLowerCase().replace(/_/g, ' ');
     
     return [
       { status: 'Submitted', timestamp: selectedReport.createdAt || now.toISOString(), message: 'Report received' },
-      ...(selectedReport.status?.toLowerCase() === 'in progress' ? [{ status: 'In Progress', timestamp: now.toISOString(), message: 'Team is investigating' }] : []),
-      ...(selectedReport.status?.toLowerCase() === 'resolved' ? [
+      ...(normalizedStatus === 'in progress' ? [{ status: 'In Progress', timestamp: now.toISOString(), message: 'Team is investigating' }] : []),
+      ...(normalizedStatus === 'completed' || normalizedStatus === 'resolved' ? [
         { status: 'In Progress', timestamp: yesterday.toISOString(), message: 'Work started' }, 
         { status: 'Resolved', timestamp: now.toISOString(), message: 'Issue has been fixed' }
       ] : [])
@@ -76,10 +78,10 @@ const MyComplaints = () => {
       await upvotePothole(id);
       
       // Optimistic update
-      setReports(prev => prev.map(r => r.id === id || r._id === id ? { ...r, upvotes: (r.upvotes || 0) + 1 } : r));
+      setReports(prev => prev.map(r => r.id === id || r._id === id ? { ...r, upvotes: (r.upvotes || r.upvoteCount || 0) + 1 } : r));
       
       if (selectedReport && (selectedReport.id === id || selectedReport._id === id)) {
-        setSelectedReport(prev => ({ ...prev, upvotes: (prev.upvotes || 0) + 1 }));
+        setSelectedReport(prev => ({ ...prev, upvotes: (prev.upvotes || prev.upvoteCount || 0) + 1 }));
       }
       toast.success('Upvoted successfully!');
     } catch {
@@ -88,12 +90,17 @@ const MyComplaints = () => {
   };
 
   // Determine markers for the map: highlight selected report
+  // Normalize: backend may return latitude/longitude or lat/lng
   const displayMarkers = selectedReport 
-    ? [...mapMarkers, { lat: selectedReport.lat, lng: selectedReport.lng, title: selectedReport.title }]
+    ? [...mapMarkers, {
+        lat: selectedReport.latitude ?? selectedReport.lat,
+        lng: selectedReport.longitude ?? selectedReport.lng,
+        title: selectedReport.title || selectedReport.issueType
+      }]
     : mapMarkers;
 
-  const mapCenter = selectedReport && selectedReport.lat
-    ? { lat: selectedReport.lat, lng: selectedReport.lng }
+  const mapCenter = selectedReport && (selectedReport.latitude || selectedReport.lat)
+    ? { lat: selectedReport.latitude ?? selectedReport.lat, lng: selectedReport.longitude ?? selectedReport.lng }
     : getCityCenter(null);
 
   return (
@@ -144,7 +151,7 @@ const MyComplaints = () => {
                 className="flex items-center gap-2 bg-rose-50 text-rose-600 px-4 py-2 rounded-full hover:bg-rose-100 transition-colors font-medium"
               >
                 <Heart size={18} fill="currentColor" />
-                {selectedReport.upvotes || 0} Upvotes
+                {selectedReport.upvotes || selectedReport.upvoteCount || 0} Upvotes
               </button>
             </div>
 
@@ -155,6 +162,11 @@ const MyComplaints = () => {
                     src={selectedReport.imageUrl || selectedReport.thumbnail} 
                     alt="Issue" 
                     className="w-full h-48 object-cover rounded-xl mb-4 border border-gray-100"
+                    crossOrigin="anonymous"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22400%22%20height%3D%22200%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20width%3D%22400%22%20height%3D%22200%22%20fill%3D%22%23f3f4f6%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20font-family%3D%22sans-serif%22%20font-size%3D%2216%22%20fill%3D%22%239ca3af%22%3ENo%20Image%20Available%3C%2Ftext%3E%3C%2Fsvg%3E';
+                    }}
                   />
                 ) : (
                   <div className="w-full h-48 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 mb-4">No Image</div>

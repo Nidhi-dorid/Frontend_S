@@ -5,7 +5,13 @@ export const login = async (email, password) => {
   return response.data;
 };
 
-export const register = async (name, email, password) => {
-  const response = await axiosInstance.post('/api/auth/register', { name, email, password });
+export const register = async ({ name, email, password, phone, cityId }) => {
+  const response = await axiosInstance.post('/api/auth/register', {
+    name,
+    email,
+    password,
+    phone,
+    cityId: Number(cityId),
+  });
   return response.data;
 };
