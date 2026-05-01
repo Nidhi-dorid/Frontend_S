@@ -22,6 +22,9 @@ const NewReport = () => {
   const [loading, setLoading] = useState(false);
   const [pinnedLocation, setPinnedLocation] = useState(null);
   const [geocodingStatus, setGeocodingStatus] = useState('idle');
+  const [mlLoading, setMlLoading] = useState(false);
+  const [mlResult, setMlResult] = useState(null);
+  const [mlError, setMlError] = useState(null);
 
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
@@ -176,17 +179,54 @@ const NewReport = () => {
       });
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       setFile(selectedFile);
       setPreviewUrl(URL.createObjectURL(selectedFile));
+
+      setMlResult(null);
+      setMlError(null);
+      setMlLoading(true);
+
+      const formData = new FormData();
+      formData.append('image', selectedFile);
+
+      try {
+        const response = await fetch('https://ml-flask-model-3jg4.onrender.com/api/detect-pothole', {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await response.json();
+
+        if (data.success && data.data?.hasPothole) {
+          setMlResult({ hasPothole: true, count: data.data.potholeCount });
+          toast.success(`Pothole detected!`);
+        } else {
+          setMlError(data.message || 'No pothole detected in the image.');
+          setFile(null);
+          setPreviewUrl(null);
+          if (fileInputRef.current) fileInputRef.current.value = '';
+          toast.error(data.message || 'No pothole detected. Please upload a valid image.');
+        }
+      } catch (error) {
+        console.error('ML API Error:', error);
+        setMlError('Error detecting pothole. Please try again.');
+        setFile(null);
+        setPreviewUrl(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        toast.error('Error connecting to ML service.');
+      } finally {
+        setMlLoading(false);
+      }
     }
   };
 
   const removeFile = () => {
     setFile(null);
     setPreviewUrl(null);
+    setMlResult(null);
+    setMlError(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -274,6 +314,22 @@ const NewReport = () => {
               ref={fileInputRef}
               onChange={handleFileChange}
             />
+            {mlLoading && (
+              <p className="text-sm text-blue-600 mt-2 flex items-center gap-2">
+                <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></span>
+                Analyzing image for potholes...
+              </p>
+            )}
+            {mlResult?.hasPothole && (
+              <p className="text-sm text-green-600 mt-2 font-medium">
+                ✅ Pothole detected
+              </p>
+            )}
+            {mlError && (
+              <p className="text-sm text-red-600 mt-2 font-medium">
+                ❌ {mlError}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -354,16 +410,20 @@ const NewReport = () => {
 
           <button
             type="submit"
-            disabled={loading || !pinnedLocation || geocodingStatus === 'loading'}
-            className="w-full bg-brand-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-all flex items-center justify-center disabled:opacity-50"
+            disabled={loading || !pinnedLocation || geocodingStatus === 'loading' || mlLoading || !mlResult?.hasPothole}
+            className="w-full bg-brand-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {geocodingStatus === 'loading'
               ? 'Finding location...'
               : !pinnedLocation
                 ? 'Select a zone to continue'
-                : loading
-                  ? 'Submitting...'
-                  : 'Submit Report'}
+                : mlLoading
+                  ? 'Analyzing image...'
+                  : !mlResult?.hasPothole
+                    ? 'Pothole detection required'
+                    : loading
+                      ? 'Submitting...'
+                      : 'Submit Report'}
           </button>
         </form>
       </div>

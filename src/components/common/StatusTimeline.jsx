@@ -11,6 +11,22 @@ const StatusTimeline = ({ history = [] }) => {
     }
   };
 
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return '';
+    let ts = timestamp;
+    // If timestamp is an ISO string missing the 'Z' (and not containing timezone offset), append 'Z'
+    // This fixes the issue where backend UTC times are parsed as local time (5.5 hours late in IST)
+    if (typeof ts === 'string' && ts.includes('T') && !ts.endsWith('Z') && !ts.includes('+') && !ts.match(/-\d{2}:\d{2}$/)) {
+      ts += 'Z';
+    }
+    // Convert to IST explicitly
+    return new Date(ts).toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    });
+  };
+
   return (
     <div className="relative border-l-2 border-gray-200 ml-3 space-y-6 pb-4">
       {history.map((step, index) => (
@@ -20,7 +36,7 @@ const StatusTimeline = ({ history = [] }) => {
           </div>
           <div>
             <h5 className="font-semibold text-gray-900 capitalize">{step.status}</h5>
-            <p className="text-sm text-gray-500">{new Date(step.timestamp).toLocaleString()}</p>
+            <p className="text-sm text-gray-500">{formatTimestamp(step.timestamp)}</p>
             {step.message && <p className="text-sm text-gray-700 mt-1">{step.message}</p>}
           </div>
         </div>

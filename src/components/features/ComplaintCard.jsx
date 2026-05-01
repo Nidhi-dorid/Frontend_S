@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, ChevronRight } from 'lucide-react';
+import { MapPin, ChevronRight, Road } from 'lucide-react';
 
 const ComplaintCard = ({ complaint, onClick }) => {
   const getStatusColor = (status) => {
@@ -19,7 +19,7 @@ const ComplaintCard = ({ complaint, onClick }) => {
       className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 cursor-pointer hover:shadow-md transition-shadow"
       onClick={() => onClick && onClick(complaint)}
     >
-      <div className="w-16 h-16 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+      <div className="w-16 h-16 rounded-lg bg-brand-bg overflow-hidden flex-shrink-0">
         {complaint.thumbnail || complaint.imageUrl ? (
           <img 
             src={complaint.thumbnail || complaint.imageUrl} 
@@ -32,7 +32,9 @@ const ComplaintCard = ({ complaint, onClick }) => {
             }}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400">No Img</div>
+          <div className="w-full h-full flex items-center justify-center text-brand-orange">
+            <Road size={28} />
+          </div>
         )}
       </div>
       
